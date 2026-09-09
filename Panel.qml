@@ -23,7 +23,7 @@ Panel {
   property bool statusWarning: false
   property bool loading: false
   property bool confirmRestore: false
-  property int nowMs: Date.now()
+  property double nowMs: Date.now()
   property string pendingAction: ""
   property string lastOperationId: ""
   property string queuedProfileId: ""
@@ -65,6 +65,15 @@ Panel {
     selectedIndex = index
     selectedPlan = null
     if (selectedProfile) runBackend(["plan", String(selectedProfile.id)], "plan")
+  }
+
+  function selectProfileById(profileId) {
+    for (var i = 0; i < profiles.length; i++) {
+      if (String(profiles[i].id) === String(profileId || "")) {
+        selectedIndex = i
+        return
+      }
+    }
   }
 
   function applyProfile(profileId) {
@@ -192,6 +201,8 @@ Panel {
     }
     if (action === "status") {
       backendStatus = response
+      if (backendStatus.preview) selectProfileById(backendStatus.preview.profileId)
+      else if (backendStatus.activeProfile) selectProfileById(backendStatus.activeProfile)
       if (backendStatus.preview) previewTimer.start()
       else previewTimer.stop()
       if (selectedProfile) planSelected()
