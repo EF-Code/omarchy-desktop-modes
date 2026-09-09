@@ -19,6 +19,7 @@ check() {
 
 check "manifest JSON" jq -e '.schemaVersion == 1 and .id == "io.github.ef-code.desktop-modes"' manifest.json
 check "no symlinks" test -z "$(find . -path './.git' -prune -o -type l -print -quit)"
+check "agent instructions are not tracked" test -z "$(git ls-files -- AGENTS.md '**/AGENTS.md')"
 check "build guide is not tracked" test -z "$(git ls-files -- '*BUILD_GUIDE.md')"
 check "release checklist is not tracked" test -z "$(git ls-files -- RELEASE_CHECKLIST.md)"
 check "no developer home path" test -z "$(rg -l '/home/hiro|/Users/' --glob '!tests/repository-check.sh' --glob '!AGENTS.md' . | head -1)"
