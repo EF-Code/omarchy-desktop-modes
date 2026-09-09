@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local, unprivileged backend for Omarchy Access Profiles.
+# Local, unprivileged backend for Omarchy Desktop Modes.
 #
 # stdout is reserved for exactly one compact JSON response. Diagnostics from
 # dependencies are redirected to stderr so QML can safely parse the result.
@@ -16,7 +16,7 @@ BASELINE_PREVIOUS_JSON='null'
 BASELINE_CAPTURE_CHANGED=false
 
 die() {
-  printf 'accessctl: %s\n' "$*" >&2
+  printf 'desktop-modesctl: %s\n' "$*" >&2
   return 1
 }
 
@@ -85,7 +85,7 @@ atomic_write() {
   local file="$1" content="$2" dir tmp
   safe_file "$file" || return 1
   dir=$(dirname -- "$file")
-  tmp=$(mktemp "$dir/.accessctl.tmp.XXXXXX" 2>/dev/null) || { die "cannot create atomic state file"; return 1; }
+  tmp=$(mktemp "$dir/.desktop-modesctl.tmp.XXXXXX" 2>/dev/null) || { die "cannot create atomic state file"; return 1; }
   chmod 600 -- "$tmp" 2>/dev/null || true
   if ! printf '%s\n' "$content" > "$tmp"; then
     rm -f -- "$tmp"
@@ -116,17 +116,17 @@ remove_safe_file() {
 init_paths() {
   local home="${HOME:-}"
   is_absolute "$home" || { die "HOME must be absolute"; return 1; }
-  CONFIG_ROOT=$(normalize_root "${ACCESSCTL_CONFIG_HOME:-${XDG_CONFIG_HOME:-$home/.config}}") || return 1
-  STATE_ROOT=$(normalize_root "${ACCESSCTL_STATE_HOME:-${XDG_STATE_HOME:-$home/.local/state}}") || return 1
-  RUNTIME_ROOT=$(normalize_root "${ACCESSCTL_RUNTIME_HOME:-${XDG_RUNTIME_DIR:-/tmp}}") || return 1
-  PLUGIN_STATE_DIR="$STATE_ROOT/omarchy-access-profiles"
-  PLUGIN_CONFIG_DIR="$CONFIG_ROOT/omarchy-access-profiles"
+  CONFIG_ROOT=$(normalize_root "${DESKTOP_MODESCTL_CONFIG_HOME:-${XDG_CONFIG_HOME:-$home/.config}}") || return 1
+  STATE_ROOT=$(normalize_root "${DESKTOP_MODESCTL_STATE_HOME:-${XDG_STATE_HOME:-$home/.local/state}}") || return 1
+  RUNTIME_ROOT=$(normalize_root "${DESKTOP_MODESCTL_RUNTIME_HOME:-${XDG_RUNTIME_DIR:-/tmp}}") || return 1
+  PLUGIN_STATE_DIR="$STATE_ROOT/omarchy-desktop-modes"
+  PLUGIN_CONFIG_DIR="$CONFIG_ROOT/omarchy-desktop-modes"
   STATE_FILE="$PLUGIN_STATE_DIR/state.json"
   BASELINE_FILE="$PLUGIN_STATE_DIR/baseline.json"
   PENDING_FILE="$PLUGIN_STATE_DIR/pending.json"
   HISTORY_FILE="$PLUGIN_STATE_DIR/history.jsonl"
   USER_PROFILES_FILE="$PLUGIN_CONFIG_DIR/profiles.json"
-  LOCK_FILE="$RUNTIME_ROOT/omarchy-access-profiles-$UID/accessctl.lock"
+  LOCK_FILE="$RUNTIME_ROOT/omarchy-desktop-modes-$UID/desktop-modesctl.lock"
   ensure_dir "$PLUGIN_STATE_DIR" || return 1
   ensure_dir "$PLUGIN_CONFIG_DIR" || return 1
   safe_file "$STATE_FILE" || return 1
@@ -138,9 +138,9 @@ init_paths() {
 }
 
 resolve_commands() {
-  HYPRCTL_BIN="${ACCESSCTL_HYPRCTL:-$(command -v hyprctl 2>/dev/null || true)}"
-  GSETTINGS_BIN="${ACCESSCTL_GSETTINGS:-$(command -v gsettings 2>/dev/null || true)}"
-  FLOCK_BIN="${ACCESSCTL_FLOCK:-$(command -v flock 2>/dev/null || true)}"
+  HYPRCTL_BIN="${DESKTOP_MODESCTL_HYPRCTL:-$(command -v hyprctl 2>/dev/null || true)}"
+  GSETTINGS_BIN="${DESKTOP_MODESCTL_GSETTINGS:-$(command -v gsettings 2>/dev/null || true)}"
+  FLOCK_BIN="${DESKTOP_MODESCTL_FLOCK:-$(command -v flock 2>/dev/null || true)}"
 }
 
 validate_profiles_json() {
@@ -221,13 +221,13 @@ validate_value() {
   ' >/dev/null 2>&1
 }
 
-mock_enabled() { [[ -n "${ACCESSCTL_MOCK_DIR:-}" ]]; }
+mock_enabled() { [[ -n "${DESKTOP_MODESCTL_MOCK_DIR:-}" ]]; }
 
-mock_path() { printf '%s/%s\n' "$ACCESSCTL_MOCK_DIR" "$1"; }
+mock_path() { printf '%s/%s\n' "$DESKTOP_MODESCTL_MOCK_DIR" "$1"; }
 
 mock_unsupported() {
   local id="$1" item
-  IFS=',' read -r -a items <<< "${ACCESSCTL_MOCK_UNSUPPORTED:-}"
+  IFS=',' read -r -a items <<< "${DESKTOP_MODESCTL_MOCK_UNSUPPORTED:-}"
   for item in "${items[@]}"; do [[ "$item" == "$id" ]] && return 0; done
   return 1
 }
@@ -320,7 +320,7 @@ apply_setting() {
   if mock_enabled; then
     local count=$((MOCK_APPLY_COUNT + 1))
     MOCK_APPLY_COUNT=$count
-    if [[ -n "${ACCESSCTL_MOCK_FAIL_AFTER:-}" && "$count" -eq "$ACCESSCTL_MOCK_FAIL_AFTER" ]]; then
+    if [[ -n "${DESKTOP_MODESCTL_MOCK_FAIL_AFTER:-}" && "$count" -eq "$DESKTOP_MODESCTL_MOCK_FAIL_AFTER" ]]; then
       APPLY_ERROR="mock failure at apply step $count"
       return 1
     fi
@@ -953,7 +953,7 @@ cmd_restore() {
   validate_operation_id "$operation" || { json_error "invalid operation id" 2; return; }
   jq -e '.preview == null' <<< "$STATE_JSON" >/dev/null 2>&1 || { json_error "preview-active" 2; return; }
   jq -e '.conflicts | length == 0' <<< "$STATE_JSON" >/dev/null 2>&1 || { json_error "external-drift-pending" 2; return; }
-  [[ "$BASELINE_JSON" != null ]] || { json_ok "$(jq -cn '{message:"No Access baseline is stored."}')"; return; }
+  [[ "$BASELINE_JSON" != null ]] || { json_ok "$(jq -cn '{message:"No Desktop Modes baseline is stored."}')"; return; }
   mapfile -t ids < <(jq -r '.values | keys[]' <<< "$BASELINE_JSON")
   for id in "${ids[@]}"; do
     baseline=$(jq -c --arg id "$id" '.values[$id]' <<< "$BASELINE_JSON")
@@ -1116,6 +1116,6 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   resolve_commands
   if [[ -z "$FLOCK_BIN" ]]; then json_error "flock is unavailable" 2; exit 2; fi
   exec 9>"$LOCK_FILE" || { json_error "cannot open state lock" 2; exit 2; }
-  if ! "$FLOCK_BIN" -w 2 9; then json_error "another Access operation is in progress" 2; exit 2; fi
+  if ! "$FLOCK_BIN" -w 2 9; then json_error "another Desktop Modes operation is in progress" 2; exit 2; fi
   main "$@"
 fi

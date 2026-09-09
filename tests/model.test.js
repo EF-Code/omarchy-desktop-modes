@@ -2,9 +2,9 @@ const assert = require("node:assert/strict")
 const fs = require("node:fs")
 const vm = require("node:vm")
 const path = require("node:path")
-const source = fs.readFileSync(path.join(__dirname, "..", "AccessModel.js"), "utf8").replace(/^\.pragma library\s*/m, "")
+const source = fs.readFileSync(path.join(__dirname, "..", "DesktopModesModel.js"), "utf8").replace(/^\.pragma library\s*/m, "")
 const sandbox = { module: { exports: {} }, exports: {}, Date }
-vm.runInNewContext(source, sandbox, { filename: "AccessModel.js" })
+vm.runInNewContext(source, sandbox, { filename: "DesktopModesModel.js" })
 const model = sandbox.module.exports
 
 const profiles = [

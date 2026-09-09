@@ -17,12 +17,12 @@ check() {
   fi
 }
 
-check "manifest JSON" jq -e '.schemaVersion == 1 and .id == "io.github.ef-code.access-profiles"' manifest.json
+check "manifest JSON" jq -e '.schemaVersion == 1 and .id == "io.github.ef-code.desktop-modes"' manifest.json
 check "no symlinks" test -z "$(find . -path './.git' -prune -o -type l -print -quit)"
 check "build guide is not tracked" test -z "$(git ls-files -- '*BUILD_GUIDE.md')"
 check "release checklist is not tracked" test -z "$(git ls-files -- RELEASE_CHECKLIST.md)"
 check "no developer home path" test -z "$(rg -l '/home/hiro|/Users/' --glob '!tests/repository-check.sh' --glob '!AGENTS.md' . | head -1)"
-check "helper syntax" bash -n scripts/accessctl
+check "helper syntax" bash -n scripts/desktop-modesctl
 check "test runner syntax" bash -n tests/run.sh
 
 printf '\nRepository checks: %s\n' "$([[ "$failed" -eq 0 ]] && echo passed || echo failed)"

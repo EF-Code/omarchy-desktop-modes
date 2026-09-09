@@ -4,7 +4,7 @@ Desktop Modes runs inside the long-lived `omarchy-shell` process. Omarchy
 plugins are unsandboxed code, so users should inspect this repository before
 enabling it.
 
-The plugin invokes `scripts/accessctl` with the user’s existing permissions. It
+The plugin invokes `scripts/desktop-modesctl` with the user’s existing permissions. It
 does not use `sudo`, `pkexec`, an install hook, a network service, telemetry,
 or an account. The helper accepts only profile IDs, registered setting IDs,
 and bounded typed values. It never evaluates profile data as shell code and

@@ -8,7 +8,7 @@ Before opening a change:
 
 ```sh
 omarchy plugin validate .
-bash -n scripts/accessctl tests/run.sh
+bash -n scripts/desktop-modesctl tests/run.sh
 node tests/model.test.js
 bash tests/run.sh
 qmllint -I "${OMARCHY_PATH:-/usr/share/omarchy}/shell" \

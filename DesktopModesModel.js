@@ -125,7 +125,7 @@ function barState(status) {
   if (!status) return { key: "baseline", label: "Desktop Modes: Original", glyph: "󰌵", warning: false }
   if (status.preview) return { key: "preview", label: "Previewing " + status.preview.profileId, glyph: "󰌵", warning: false }
   if (status.conflicts && status.conflicts.length > 0)
-    return { key: "drift", label: "A managed setting changed outside Access", glyph: "󰌵", warning: true }
+    return { key: "drift", label: "A managed setting changed outside Desktop Modes", glyph: "󰌵", warning: true }
   if (status.activeProfile)
     return { key: "active", label: "Desktop Modes: " + status.activeProfile + " active", glyph: "󰌵", warning: false }
   return { key: "baseline", label: "Desktop Modes: Original", glyph: "󰌵", warning: false }
@@ -141,12 +141,12 @@ function hasActionableChanges(plan) {
 
 function backendErrorMessage(error) {
   switch (String(error || "")) {
-  case "external-drift": return "Some managed settings changed outside Access. Resolve each choice below."
+  case "external-drift": return "Some managed settings changed outside Desktop Modes. Resolve each choice below."
   case "external-drift-pending": return "Resolve the pending external changes before applying another profile."
   case "external-drift-changed": return "That setting changed again. Review its latest value before choosing again."
   case "preview-active": return "Keep or revert the active preview before continuing."
   case "operation-id-reused": return "That operation ID was already used for a different request. Try again."
-  default: return String(error || "Access backend failed")
+  default: return String(error || "Desktop Modes backend failed")
   }
 }
 

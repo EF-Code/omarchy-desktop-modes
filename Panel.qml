@@ -5,12 +5,12 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
-import "AccessModel.js" as Model
+import "DesktopModesModel.js" as Model
 import "components"
 
 Panel {
   id: root
-  moduleName: "io.github.ef-code.access-profiles"
+  moduleName: "io.github.ef-code.desktop-modes"
   manageIpc: false
 
   property var anchorItem: null
@@ -29,7 +29,7 @@ Panel {
   property string queuedProfileId: ""
   property bool editingProfile: false
   property int previewSeconds: 30
-  readonly property string backendPath: decodeURIComponent(String(Qt.resolvedUrl("scripts/accessctl")).replace(/^file:\/\//, ""))
+  readonly property string backendPath: decodeURIComponent(String(Qt.resolvedUrl("scripts/desktop-modesctl")).replace(/^file:\/\//, ""))
   readonly property var selectedProfile: profiles.length > 0 && selectedIndex >= 0 && selectedIndex < profiles.length ? profiles[selectedIndex] : null
   readonly property bool hasActionablePlan: Model.hasActionableChanges(selectedPlan)
   readonly property bool hasBaseline: backendStatus.baselineCaptured === true
@@ -85,7 +85,7 @@ Panel {
     }
     if (loading || backendStatus.preview || hasPendingConflicts) {
       statusMessage = backendStatus.preview ? "Keep or revert the active preview before continuing."
-        : (hasPendingConflicts ? "Resolve the pending external changes before applying another profile." : "Access is busy. Try again in a moment.")
+        : (hasPendingConflicts ? "Resolve the pending external changes before applying another profile." : "Desktop Modes is busy. Try again in a moment.")
       statusWarning = true
       return
     }
@@ -148,7 +148,7 @@ Panel {
   function requestRestore() {
     if (!opened) root.open()
     if (!hasBaseline) {
-      statusMessage = "No Access baseline has been captured yet."
+      statusMessage = "No Desktop Modes baseline has been captured yet."
       statusWarning = false
       return
     }
@@ -180,7 +180,7 @@ Panel {
   function handleResponse(action, response, exitCode) {
     loading = false
     if (!response || response.ok !== true) {
-      statusMessage = Model.backendErrorMessage(response && response.error ? response.error : "Access backend failed")
+      statusMessage = Model.backendErrorMessage(response && response.error ? response.error : "Desktop Modes backend failed")
       statusWarning = true
       if (response && response.details && Array.isArray(response.details.conflicts))
         backendStatus.conflicts = response.details.conflicts
@@ -226,7 +226,7 @@ Panel {
     statusMessage = response.preservedExternal && response.preservedExternal.length > 0
       ? "Preview closed; changes made by another tool were preserved."
       : (action === "preview" ? "Preview active — keep it or revert now."
-        : (action === "resolve-conflict" ? "External change resolved." : "Access settings updated."))
+        : (action === "resolve-conflict" ? "External change resolved." : "Desktop Modes settings updated."))
     if (hostWidget && typeof hostWidget.broadcast === "function")
       Qt.callLater(function() { hostWidget.broadcast("refresh") })
     else refresh()
@@ -341,7 +341,7 @@ Panel {
           StatusBanner {
             Layout.fillWidth: true
             message: root.statusMessage || (root.backendStatus.preview ? "Previewing " + root.backendStatus.preview.profileId + " — " + Model.formatCountdown(root.backendStatus.preview.deadline, root.nowMs) + " remaining."
-              : (root.hasPendingConflicts ? "Some managed settings changed outside Access. Choose what to keep for each setting." : ""))
+              : (root.hasPendingConflicts ? "Some managed settings changed outside Desktop Modes. Choose what to keep for each setting." : ""))
             warning: root.statusWarning || root.hasPendingConflicts
             foreground: root.barForeground
           }
@@ -514,7 +514,7 @@ Panel {
             Layout.fillWidth: true
             visible: root.confirmRestore
             title: "Restore original settings?"
-            message: "Access will restore its captured baseline and stop managing the active profile. External changes will be shown as conflicts first."
+            message: "Desktop Modes will restore its captured baseline and stop managing the active profile. External changes will be shown as conflicts first."
             foreground: root.barForeground
             onAccepted: root.restoreNow()
             onRejected: root.confirmRestore = false

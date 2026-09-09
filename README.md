@@ -33,15 +33,15 @@ Plugins run as unsandboxed code inside `omarchy-shell`; inspect this repository
 before enabling it.
 
 ```sh
-omarchy plugin add https://github.com/EF-Code/omarchy-access-profiles.git --enable
-omarchy bar move io.github.ef-code.access-profiles --section right
+omarchy plugin add https://github.com/EF-Code/omarchy-desktop-modes.git --enable
+omarchy bar move io.github.ef-code.desktop-modes --section right
 ```
 
 Open the Desktop Modes icon, select a mode, review the plan, and choose **Try** or
 **Use this mode**. A trial has explicit **Keep** and **Revert now** actions.
 The first preview or apply captures the original value for each setting Access
 actually manages. Later profile switches add only their newly managed settings
-to that baseline. Restore leaves settings Access never changed alone, restores
+to that baseline. Restore leaves settings Desktop Modes never changed alone, restores
 safe entries even when another entry has external drift, and keeps conflicts
 pending until you resolve them. The panel presents **Keep external** and
 **Restore original** for each conflict. While a preview or conflict is pending,
@@ -50,7 +50,7 @@ new profile mutations are blocked.
 ## Make a mode yours
 
 Select any mode and choose **Make this mode yours**. The plugin saves a validated
-copy under `${XDG_CONFIG_HOME:-$HOME/.config}/omarchy-access-profiles/profiles.json`.
+copy under `${XDG_CONFIG_HOME:-$HOME/.config}/omarchy-desktop-modes/profiles.json`.
 Custom modes can contain only the same registered, typed, bounded settings as
 the built-ins; names and descriptions cannot introduce commands or paths.
 
@@ -64,9 +64,9 @@ apply it, `R` to return to Original, and `Escape` to close. You can also invoke
 the existing IPC from a Hyprland binding or launcher:
 
 ```sh
-omarchy-shell io.github.ef-code.access-profiles applyProfile focus
-omarchy-shell io.github.ef-code.access-profiles applyProfile presentation
-omarchy-shell io.github.ef-code.access-profiles restore
+omarchy-shell io.github.ef-code.desktop-modes applyProfile focus
+omarchy-shell io.github.ef-code.desktop-modes applyProfile presentation
+omarchy-shell io.github.ef-code.desktop-modes restore
 ```
 
 Right-clicking the bar icon opens the guarded Return to Original flow.
@@ -78,20 +78,20 @@ the plugin. Omarchy plugins have no uninstall hook, so removal cannot restore
 settings automatically.
 
 ```sh
-omarchy plugin remove io.github.ef-code.access-profiles
+omarchy plugin remove io.github.ef-code.desktop-modes
 ```
 
 If the panel is unavailable while the checkout still exists, inspect the state
 and run the helper with a fresh operation ID:
 
 ```sh
-~/.config/omarchy/plugins/io.github.ef-code.access-profiles/scripts/accessctl status
-~/.config/omarchy/plugins/io.github.ef-code.access-profiles/scripts/accessctl restore \
+~/.config/omarchy/plugins/io.github.ef-code.desktop-modes/scripts/desktop-modesctl status
+~/.config/omarchy/plugins/io.github.ef-code.desktop-modes/scripts/desktop-modesctl restore \
   --operation-id "$(uuidgen)"
 ```
 
 The baseline is stored at
-`${XDG_STATE_HOME:-$HOME/.local/state}/omarchy-access-profiles/baseline.json`.
+`${XDG_STATE_HOME:-$HOME/.local/state}/omarchy-desktop-modes/baseline.json`.
 The helper refuses unsafe XDG paths and state-file symlinks. Manual recovery
 should be performed only after inspecting that file and the live values.
 
@@ -142,9 +142,9 @@ node tests/model.test.js
 bash tests/repository-check.sh
 ```
 
-For a safe backend-only run, set `ACCESSCTL_MOCK_DIR` to an absolute temporary
+For a safe backend-only run, set `DESKTOP_MODESCTL_MOCK_DIR` to an absolute temporary
 directory. The mock adapter never changes the live desktop. The test suite also
-includes a Bats file; use Bats 1.14 or newer when running `tests/accessctl.bats`.
+includes a Bats file; use Bats 1.14 or newer when running `tests/desktop-modesctl.bats`.
 
 ## Roadmap
 

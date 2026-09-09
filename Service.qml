@@ -12,7 +12,7 @@ Item {
   property string backendError: ""
   property bool startupPhase: true
   property int previewDeadline: 0
-  readonly property string backendPath: decodeURIComponent(String(Qt.resolvedUrl("scripts/accessctl")).replace(/^file:\/\//, ""))
+  readonly property string backendPath: decodeURIComponent(String(Qt.resolvedUrl("scripts/desktop-modesctl")).replace(/^file:\/\//, ""))
 
   function operationId() {
     var hex = ""
@@ -68,7 +68,7 @@ Item {
   }
 
   IpcHandler {
-    target: "io.github.ef-code.access-profiles.service"
+    target: "io.github.ef-code.desktop-modes.service"
     function recover() { root.run(["recover"], "recover") }
     function refresh() { root.run(["status"], "status") }
   }

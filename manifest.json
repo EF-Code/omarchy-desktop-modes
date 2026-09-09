@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "io.github.ef-code.access-profiles",
+  "id": "io.github.ef-code.desktop-modes",
   "name": "Desktop Modes",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "author": "EF-Code",
   "license": "MIT",
   "description": "One-click desktop modes for focus, comfort, presenting, and reduced motion—with safe preview and exact undo.",

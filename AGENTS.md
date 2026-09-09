@@ -1,4 +1,4 @@
-# Access Profiles repository rules
+# Desktop Modes repository rules
 
 ## Scope
 

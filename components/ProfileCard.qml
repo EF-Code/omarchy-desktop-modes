@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Commons
-import "../AccessModel.js" as Model
+import "../DesktopModesModel.js" as Model
 
 Rectangle {
   id: root
