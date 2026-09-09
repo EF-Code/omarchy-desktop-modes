@@ -28,7 +28,10 @@ const plan = {
 }
 assert.deepEqual(model.normalizedChanges(plan).map((item) => item.id), ["a", "b"])
 assert.equal(model.warningSummary(plan), "1 setting is unavailable")
-assert.equal(model.changeText(plan.changes[0]), "Zed  On → Off")
+assert.equal(model.changeText(plan.changes[0]), "On → Off")
+assert.equal(model.profileGlyph({ icon: "focus" }), "󰋱")
+assert.deepEqual(Array.from(model.profileEffects({ settings: { "gtk.text.scale": 1.25, "hypr.animations.enabled": false } })), ["Text 125%", "Motion off"])
+assert.equal(model.profileName(profiles, "focus"), "Focus")
 assert.equal(model.statusText("restart-required"), "Restart required")
 assert.equal(model.formatCountdown(130, 100000), "30s")
 assert.equal(model.formatCountdown(130, 0), "2:10")

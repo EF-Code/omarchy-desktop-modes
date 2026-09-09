@@ -11,6 +11,7 @@ Item {
   property string backendOutput: ""
   property string backendError: ""
   property bool startupPhase: true
+  property int previewDeadline: 0
   readonly property string backendPath: decodeURIComponent(String(Qt.resolvedUrl("scripts/accessctl")).replace(/^file:\/\//, ""))
 
   function operationId() {
@@ -38,6 +39,7 @@ Item {
     }
     if (action === "status") {
       activeProfile = String(response.activeProfile || "")
+      previewDeadline = response.preview ? Number(response.preview.deadline || 0) : 0
       if (startupPhase) {
         startupPhase = false
         var conflicts = Array.isArray(response.conflicts) ? response.conflicts : []
@@ -61,7 +63,7 @@ Item {
   Timer {
     interval: 10000
     repeat: true
-    running: root.activeProfile !== ""
+    running: root.activeProfile !== "" || root.previewDeadline > 0
     onTriggered: root.run(["status"], "status")
   }
 

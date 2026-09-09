@@ -61,10 +61,35 @@ function formatValue(value) {
 
 function changeText(change) {
   if (!change) return ""
-  var label = String(change.label || settingLabels[change.id] || change.id || "Setting")
   if (change.status === "unsupported" || change.status === "unavailable" || change.status === "error")
-    return label + " — " + statusText(change.status)
-  return label + "  " + formatValue(change.from) + " → " + formatValue(change.to)
+    return statusText(change.status)
+  return formatValue(change.from) + " → " + formatValue(change.to)
+}
+
+function profileGlyph(profile) {
+  var icons = {
+    "accessibility": "󰖸", "motion-off": "󰆴", presentation: "󰐪",
+    focus: "󰋱", clarity: "󰍉", "low-stimulation": "󰒲"
+  }
+  return icons[String(profile && profile.icon || "")] || "󰌵"
+}
+
+function profileEffects(profile) {
+  if (!profile || !profile.settings) return []
+  var settings = profile.settings
+  var effects = []
+  if (settings["gtk.text.scale"] !== undefined) effects.push("Text " + Math.round(Number(settings["gtk.text.scale"]) * 100) + "%")
+  if (settings["gtk.cursor.size"] !== undefined) effects.push("Cursor " + settings["gtk.cursor.size"] + "px")
+  if (settings["hypr.animations.enabled"] === false) effects.push("Motion off")
+  if (settings["hypr.blur.enabled"] === false) effects.push("Blur off")
+  if (settings["hypr.dim_inactive"] === true) effects.push("Focus cue")
+  if (settings["hypr.border_size"] !== undefined) effects.push("Border " + settings["hypr.border_size"] + "px")
+  return effects.slice(0, 3)
+}
+
+function profileName(profiles, id) {
+  var profile = profileById(profiles, id)
+  return profile ? String(profile.name) : String(id || "Original")
 }
 
 function statusText(status) {
@@ -133,6 +158,9 @@ if (typeof module !== "undefined") {
     normalizedChanges: normalizedChanges,
     formatValue: formatValue,
     changeText: changeText,
+    profileGlyph: profileGlyph,
+    profileEffects: profileEffects,
+    profileName: profileName,
     statusText: statusText,
     warningSummary: warningSummary,
     formatCountdown: formatCountdown,

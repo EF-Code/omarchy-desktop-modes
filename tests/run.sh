@@ -296,6 +296,21 @@ test_profile_validation() {
   cleanup_env
 }
 
+test_custom_profile_crud() {
+  new_env
+  local payload='{"id":"my-clear-mode","name":"My Clear Mode","description":"A personal clarity preset.","icon":"clarity","settings":{"gtk.text.scale":1.4,"gtk.cursor.size":48}}'
+  call save-profile "$payload"
+  local ok=$([ "$STATUS" -eq 0 ] && jq -e '.saved == true' <<< "$OUTPUT" >/dev/null 2>&1 && echo yes || echo no)
+  call list-profiles
+  ok=$([[ "$ok" == yes && "$STATUS" -eq 0 ]] && jq -e '.profiles[] | select(.id == "my-clear-mode" and .source == "custom")' <<< "$OUTPUT" >/dev/null 2>&1 && echo yes || echo no)
+  call delete-profile my-clear-mode
+  ok=$([[ "$ok" == yes && "$STATUS" -eq 0 ]] && echo yes || echo no)
+  call list-profiles
+  ok=$([[ "$ok" == yes && "$STATUS" -eq 0 ]] && ! jq -e '.profiles[] | select(.id == "my-clear-mode")' <<< "$OUTPUT" >/dev/null 2>&1 && echo yes || echo no)
+  if [[ "$ok" == yes ]]; then record_pass "custom profile save and delete"; else record_fail "custom profile save and delete"; fi
+  cleanup_env
+}
+
 test_invalid_and_symlink_state() {
   new_env
   call plan 'comfortable;touch /tmp/accessctl-should-not-exist'
@@ -362,6 +377,7 @@ test_conflict_restore_rechecks_live_drift
 test_no_supported_settings_fails_without_baseline
 test_idempotency_and_diagnostics
 test_profile_validation
+test_custom_profile_crud
 test_invalid_and_symlink_state
 test_malformed_state
 test_malformed_pending_journal

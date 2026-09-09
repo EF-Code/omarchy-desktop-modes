@@ -175,10 +175,14 @@ load_profiles() {
   validate_profiles_json "$DEFAULT_PROFILES_FILE" || { die "built-in profiles failed validation"; return 1; }
   if [[ -e "$USER_PROFILES_FILE" ]]; then
     validate_profiles_json "$USER_PROFILES_FILE" || { die "user profiles failed validation"; return 1; }
-    PROFILES_JSON=$(jq -c --argfile built "$DEFAULT_PROFILES_FILE" --argfile user "$USER_PROFILES_FILE" \
-      'if (([$built.profiles[].id] + [$user.profiles[].id]) | unique | length) != (($built.profiles + $user.profiles) | length) then error("duplicate profile id") else ($built.profiles + $user.profiles) end' 2>/dev/null) || { die "duplicate profile id"; return 1; }
+    PROFILES_JSON=$(jq -c -s '
+      .[0] as $built | .[1] as $user |
+      if (([$built.profiles[].id] + [$user.profiles[].id]) | unique | length) != (($built.profiles + $user.profiles) | length)
+      then error("duplicate profile id")
+      else ([$built.profiles[] + {source:"built-in"}] + [$user.profiles[] + {source:"custom"}]) end
+    ' "$DEFAULT_PROFILES_FILE" "$USER_PROFILES_FILE" 2>/dev/null) || { die "duplicate profile id"; return 1; }
   else
-    PROFILES_JSON=$(jq -c '.profiles' "$DEFAULT_PROFILES_FILE" 2>/dev/null) || { die "cannot read profiles"; return 1; }
+    PROFILES_JSON=$(jq -c '[.profiles[] + {source:"built-in"}]' "$DEFAULT_PROFILES_FILE" 2>/dev/null) || { die "cannot read profiles"; return 1; }
   fi
 }
 
@@ -788,6 +792,38 @@ cmd_capabilities() {
 
 cmd_list_profiles() { jq -cn --argjson profiles "$PROFILES_JSON" '{ok:true,schemaVersion:1,profiles:$profiles}'; }
 
+cmd_save_profile() {
+  local raw="$1" profile existing='{"schemaVersion":1,"profiles":[]}' candidate id
+  profile=$(jq -c 'if type == "object" then {id,name,description,icon,settings} else empty end' <<< "$raw" 2>/dev/null) || { json_error "custom profile is invalid" 2; return; }
+  [[ -n "$profile" ]] || { json_error "custom profile is invalid" 2; return; }
+  id=$(jq -r '.id // ""' <<< "$profile")
+  jq -e --arg id "$id" 'all(.profiles[]; .id != $id)' "$DEFAULT_PROFILES_FILE" >/dev/null 2>&1 || { json_error "built-in profiles cannot be replaced" 2; return; }
+  if [[ -f "$USER_PROFILES_FILE" ]]; then existing=$(jq -c . "$USER_PROFILES_FILE" 2>/dev/null) || { json_error "user profiles are malformed" 2; return; }; fi
+  candidate=$(jq -c --argjson profile "$profile" --arg id "$id" '.profiles = ([.profiles[] | select(.id != $id)] + [$profile])' <<< "$existing")
+  local check_file; check_file=$(mktemp "$PLUGIN_CONFIG_DIR/.profiles-check.XXXXXX") || { json_error "cannot validate custom profile" 2; return; }
+  printf '%s\n' "$candidate" > "$check_file"
+  if ! validate_profiles_json "$check_file"; then rm -f -- "$check_file"; json_error "custom profile is invalid" 2; return; fi
+  rm -f -- "$check_file"
+  atomic_write "$USER_PROFILES_FILE" "$candidate" || { json_error "could not save custom profile" 2; return; }
+  json_ok "$(jq -cn --arg id "$id" '{profileId:$id,saved:true}')"
+}
+
+cmd_delete_profile() {
+  local id="$1" existing candidate
+  [[ "$id" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] || { json_error "custom profile id is invalid" 2; return; }
+  [[ -f "$USER_PROFILES_FILE" ]] || { json_error "custom profile not found" 2; return; }
+  jq -e --arg id "$id" 'any(.profiles[]; .id == $id)' "$USER_PROFILES_FILE" >/dev/null 2>&1 || { json_error "custom profile not found" 2; return; }
+  jq -e --arg id "$id" '.activeProfile != $id and (.preview == null or .preview.profileId != $id)' <<< "$STATE_JSON" >/dev/null || { json_error "active profiles cannot be deleted" 2; return; }
+  existing=$(jq -c . "$USER_PROFILES_FILE")
+  candidate=$(jq -c --arg id "$id" '.profiles |= map(select(.id != $id))' <<< "$existing")
+  if [[ "$(jq '.profiles | length' <<< "$candidate")" == 0 ]]; then
+    remove_safe_file "$USER_PROFILES_FILE" || { json_error "could not delete custom profile" 2; return; }
+  else
+    atomic_write "$USER_PROFILES_FILE" "$candidate" || { json_error "could not delete custom profile" 2; return; }
+  fi
+  json_ok "$(jq -cn --arg id "$id" '{profileId:$id,deleted:true}')"
+}
+
 cmd_status() {
   local caps values='{}' id value
   local -a ids=()
@@ -844,7 +880,7 @@ cmd_apply() {
 
 cmd_preview() {
   local profile_id="$1" seconds="$2" operation="$3" profile before target deadline
-  [[ "$seconds" =~ ^[1-9][0-9]{0,3}$ && "$seconds" -le 300 ]] || { json_error "preview duration must be 1-300 seconds" 2; return; }
+  [[ "$seconds" =~ ^[1-9][0-9]{0,3}$ && "$seconds" -le 3600 ]] || { json_error "preview duration must be 1-3600 seconds" 2; return; }
   profile=$(profile_json "$profile_id") || { json_error "unknown profile" 2; return; }
   [[ -n "$profile" ]] || { json_error "unknown profile" 2; return; }
   validate_operation_id "$operation" || { json_error "invalid operation id" 2; return; }
@@ -1044,7 +1080,7 @@ cmd_export_diagnostics() {
   caps=$(capabilities_json)
   jq -cn --argjson caps "$caps" --arg active "$(jq -r '.activeProfile // ""' <<< "$STATE_JSON")" \
     --argjson baseline "$(jq -cn --argjson value "$([[ "$BASELINE_JSON" == null ]] && echo false || echo true)" '$value')" \
-    '{ok:true,schemaVersion:1,pluginVersion:"1.0.1",activeProfile:$active,baselineParsed:$baseline,capabilities:$caps,notes:["No usernames, home paths, window titles, command history, or application content are included."]}'
+    '{ok:true,schemaVersion:1,pluginVersion:"1.1.0",activeProfile:$active,baselineParsed:$baseline,capabilities:$caps,notes:["No usernames, home paths, window titles, command history, or application content are included."]}'
 }
 
 main() {
@@ -1057,6 +1093,8 @@ main() {
     capabilities) cmd_capabilities ;;
     status) cmd_status ;;
     list-profiles) cmd_list_profiles ;;
+    save-profile) if [[ $# -eq 1 ]]; then cmd_save_profile "$1"; else json_error "usage: save-profile <json>" 2; fi ;;
+    delete-profile) if [[ $# -eq 1 ]]; then cmd_delete_profile "$1"; else json_error "usage: delete-profile <profile-id>" 2; fi ;;
     plan) if [[ $# -eq 1 ]]; then cmd_plan "$1"; else json_error "usage: plan <profile-id>" 2; fi ;;
     apply) if [[ $# -eq 3 && "$2" == --operation-id ]]; then cmd_apply "$1" "$3"; else json_error "usage: apply <profile-id> --operation-id <uuid>" 2; fi ;;
     preview) if [[ $# -eq 5 && "$2" == --seconds && "$4" == --operation-id ]]; then cmd_preview "$1" "$3" "$5"; else json_error "usage: preview <profile-id> --seconds <n> --operation-id <uuid>" 2; fi ;;

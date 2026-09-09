@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "io.github.ef-code.access-profiles",
   "name": "Access Profiles",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "EF-Code",
   "license": "MIT",
-  "description": "Reversible accessibility profiles for motion, readability, cursor, and input settings.",
+  "description": "One-click desktop modes for focus, comfort, presenting, and reduced motion—with safe preview and exact undo.",
   "kinds": [
     "service",
     "bar-widget"
@@ -17,7 +17,7 @@
   },
   "barWidget": {
     "displayName": "Access Profiles",
-    "description": "Preview, apply, and restore accessibility profiles.",
+    "description": "Try reversible desktop modes for focus, comfort, clarity, and reduced motion.",
     "category": "Accessibility",
     "allowMultiple": false,
     "defaultSection": "right"

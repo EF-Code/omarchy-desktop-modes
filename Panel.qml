@@ -27,6 +27,8 @@ Panel {
   property string pendingAction: ""
   property string lastOperationId: ""
   property string queuedProfileId: ""
+  property bool editingProfile: false
+  property int previewSeconds: 30
   readonly property string backendPath: decodeURIComponent(String(Qt.resolvedUrl("scripts/accessctl")).replace(/^file:\/\//, ""))
   readonly property var selectedProfile: profiles.length > 0 && selectedIndex >= 0 && selectedIndex < profiles.length ? profiles[selectedIndex] : null
   readonly property bool hasActionablePlan: Model.hasActionableChanges(selectedPlan)
@@ -95,11 +97,24 @@ Panel {
     if (selectedProfile) runBackend(["plan", String(selectedProfile.id)], "plan")
   }
 
+  function editSelectedProfile() {
+    if (!selectedProfile || loading) return
+    editingProfile = true
+    profileBuilder.reset(selectedProfile)
+  }
+
+  function saveCustomProfile(payload) { runBackend(["save-profile", payload], "save-profile") }
+
+  function deleteSelectedProfile() {
+    if (!selectedProfile || selectedProfile.source !== "custom" || loading) return
+    runBackend(["delete-profile", String(selectedProfile.id)], "delete-profile")
+  }
+
   function previewSelected() {
     if (!selectedProfile || !hasActionablePlan || loading || backendStatus.preview || hasPendingConflicts) return
     var id = operationId()
     lastOperationId = id
-    runBackend(["preview", String(selectedProfile.id), "--seconds", "30", "--operation-id", id], "preview")
+    runBackend(["preview", String(selectedProfile.id), "--seconds", String(previewSeconds), "--operation-id", id], "preview")
   }
 
   function applySelected() {
@@ -191,6 +206,12 @@ Panel {
       loadProfiles()
       return
     }
+    if (action === "save-profile" || action === "delete-profile") {
+      editingProfile = false
+      statusMessage = action === "save-profile" ? "Custom mode saved." : "Custom mode deleted."
+      loadProfiles()
+      return
+    }
 
     statusMessage = response.preservedExternal && response.preservedExternal.length > 0
       ? "Preview closed; changes made by another tool were preserved."
@@ -205,7 +226,10 @@ Panel {
     if (opened) {
       Qt.callLater(function() { keyCatcher.forceActiveFocus() })
       refresh()
-    } else confirmRestore = false
+    } else {
+      confirmRestore = false
+      editingProfile = false
+    }
   }
 
   Process {
@@ -280,14 +304,14 @@ Panel {
             Layout.fillWidth: true
             Text {
               Layout.fillWidth: true
-              text: "ACCESS"
+              text: "DESKTOP MODES"
               color: root.barForeground
               font.family: root.bar ? root.bar.fontFamily : Style.font.family
               font.pixelSize: Style.font.title
               font.bold: true
             }
             Text {
-              text: root.backendStatus.preview ? "Previewing" : (root.backendStatus.activeProfile ? "Active" : "Original")
+              text: root.backendStatus.preview ? "PREVIEWING" : (root.backendStatus.activeProfile ? "ACTIVE" : "ORIGINAL")
               color: root.backendStatus.conflicts && root.backendStatus.conflicts.length > 0 ? Color.urgent : root.barForeground
               font.family: Style.font.family
               font.pixelSize: Style.font.caption
@@ -296,7 +320,7 @@ Panel {
 
           Text {
             Layout.fillWidth: true
-            text: "Make the desktop easier to see, follow, and control."
+            text: "Switch how Omarchy feels. Try every change before you keep it."
             color: Qt.alpha(root.barForeground, 0.78)
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
@@ -321,6 +345,7 @@ Panel {
                 required property int index
                 profile: modelData
                 selected: index === root.selectedIndex
+                active: String(root.backendStatus.activeProfile || "") === String(modelData.id)
                 foreground: root.barForeground
                 onClicked: root.selectProfile(index)
               }
@@ -333,6 +358,16 @@ Panel {
             color: root.barForeground
             font.family: Style.font.family
             font.pixelSize: Style.font.subtitle
+            font.bold: true
+          }
+
+          Text {
+            Layout.fillWidth: true
+            visible: root.selectedProfile && root.selectedProfile.source === "custom"
+            text: "CUSTOM MODE"
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.caption
             font.bold: true
           }
 
@@ -359,6 +394,33 @@ Panel {
             }
           }
 
+          Button {
+            Layout.fillWidth: true
+            text: root.selectedProfile && root.selectedProfile.source === "custom" ? "Edit this mode" : "Make this mode yours"
+            iconText: "󰏫"
+            enabled: !!root.selectedProfile && !root.loading && !root.backendStatus.preview
+            focusable: true
+            onClicked: root.editSelectedProfile()
+          }
+
+          ProfileBuilder {
+            id: profileBuilder
+            Layout.fillWidth: true
+            visible: root.editingProfile
+            foreground: root.barForeground
+            onSaveRequested: function(payload) { root.saveCustomProfile(payload) }
+            onCancelled: root.editingProfile = false
+          }
+
+          Button {
+            Layout.fillWidth: true
+            visible: root.selectedProfile && root.selectedProfile.source === "custom"
+            text: "Delete custom mode"
+            enabled: !root.loading && String(root.backendStatus.activeProfile || "") !== String(root.selectedProfile ? root.selectedProfile.id : "")
+            focusable: true
+            onClicked: root.deleteSelectedProfile()
+          }
+
           ColumnLayout {
             Layout.fillWidth: true
             spacing: Style.space(8)
@@ -380,17 +442,33 @@ Panel {
 
           RowLayout {
             Layout.fillWidth: true
+            spacing: Style.space(6)
+            visible: !root.backendStatus.preview
+            Text {
+              text: "TRY FOR"
+              color: Qt.alpha(root.barForeground, 0.58)
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              font.bold: true
+            }
+            Button { text: "30s"; selected: root.previewSeconds === 30; focusable: true; onClicked: root.previewSeconds = 30 }
+            Button { text: "5m"; selected: root.previewSeconds === 300; focusable: true; onClicked: root.previewSeconds = 300 }
+            Button { text: "25m focus"; selected: root.previewSeconds === 1500; focusable: true; onClicked: root.previewSeconds = 1500 }
+          }
+
+          RowLayout {
+            Layout.fillWidth: true
             spacing: Style.space(8)
             Button {
               Layout.fillWidth: true
-              text: "Preview 30s"
+              text: root.previewSeconds === 30 ? "Try for 30 seconds" : (root.previewSeconds === 300 ? "Try for 5 minutes" : "Start 25-minute session")
               enabled: root.hasActionablePlan && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
               focusable: true
               onClicked: root.previewSelected()
             }
             Button {
               Layout.fillWidth: true
-              text: "Apply"
+              text: "Use this mode"
               enabled: root.hasActionablePlan && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
               focusable: true
               onClicked: root.applySelected()
@@ -418,7 +496,7 @@ Panel {
 
           Button {
             Layout.fillWidth: true
-            text: "Restore original settings"
+            text: "Return to Original"
             enabled: root.hasBaseline && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
             focusable: true
             onClicked: root.requestRestore()

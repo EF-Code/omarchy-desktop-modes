@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+- Reframed Access Profiles as reversible Desktop Modes and added Large & Clear
+  and Low Stimulation presets.
+- Redesigned profile cards with icons, effect summaries, active-state labels,
+  clearer actions, and less repetitive change rows.
+- Added safe custom-mode duplication, editing, and deletion under XDG config.
+- Added 30-second, 5-minute, and 25-minute timed sessions. The background
+  service now monitors preview deadlines even while the panel is closed.
+- Added a repository-root marketplace preview and expanded usage recipes.
+
 ## 1.0.1
 
 - Hardened write-ahead recovery so incomplete operations roll back only

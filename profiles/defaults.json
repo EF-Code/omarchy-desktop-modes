@@ -2,6 +2,31 @@
   "schemaVersion": 1,
   "profiles": [
     {
+      "id": "large-clear",
+      "name": "Large & Clear",
+      "description": "Enlarge text, pointer, and window edges without removing motion.",
+      "icon": "clarity",
+      "settings": {
+        "gtk.text.scale": 1.35,
+        "gtk.cursor.size": 44,
+        "hypr.cursor.zoom_factor": 1.25,
+        "hypr.border_size": 4
+      }
+    },
+    {
+      "id": "low-stimulation",
+      "name": "Low Stimulation",
+      "description": "Strip away movement and layered visual effects.",
+      "icon": "low-stimulation",
+      "settings": {
+        "hypr.animations.enabled": false,
+        "gtk.animations.enabled": false,
+        "hypr.blur.enabled": false,
+        "hypr.shadow.enabled": false,
+        "hypr.dim_inactive": false
+      }
+    },
+    {
       "id": "comfortable",
       "name": "Comfortable",
       "description": "Reduce visual and input strain during long sessions.",
