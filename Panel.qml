@@ -380,6 +380,48 @@ Panel {
             wrapMode: Text.WordWrap
           }
 
+          RowLayout {
+            Layout.fillWidth: true
+            spacing: Style.space(6)
+            visible: !root.backendStatus.preview
+            Text {
+              text: "TRY FOR"
+              color: Qt.alpha(root.barForeground, 0.58)
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              font.bold: true
+            }
+            Button { text: "30s"; selected: root.previewSeconds === 30; focusable: true; onClicked: root.previewSeconds = 30 }
+            Button { text: "5m"; selected: root.previewSeconds === 300; focusable: true; onClicked: root.previewSeconds = 300 }
+            Button { text: "25m focus"; selected: root.previewSeconds === 1500; focusable: true; onClicked: root.previewSeconds = 1500 }
+          }
+
+          RowLayout {
+            Layout.fillWidth: true
+            spacing: Style.space(8)
+            Button {
+              Layout.fillWidth: true
+              text: root.previewSeconds === 30 ? "Try for 30 seconds" : (root.previewSeconds === 300 ? "Try for 5 minutes" : "Start 25-minute session")
+              enabled: root.hasActionablePlan && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
+              focusable: true
+              onClicked: root.previewSelected()
+            }
+            Button {
+              Layout.fillWidth: true
+              text: "Use this mode"
+              enabled: root.hasActionablePlan && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
+              focusable: true
+              onClicked: root.applySelected()
+            }
+          }
+
+          RowLayout {
+            Layout.fillWidth: true
+            visible: !!root.backendStatus.preview
+            Button { Layout.fillWidth: true; text: "Keep"; enabled: !root.loading; focusable: true; onClicked: root.keepPreview() }
+            Button { Layout.fillWidth: true; text: "Revert now"; enabled: !root.loading; focusable: true; onClicked: root.cancelPreview() }
+          }
+
           ColumnLayout {
             Layout.fillWidth: true
             spacing: Style.space(2)
@@ -437,60 +479,6 @@ Panel {
                 onKeepExternal: root.resolveConflict(String(modelData.id), true)
                 onRestoreBaseline: root.resolveConflict(String(modelData.id), false)
               }
-            }
-          }
-
-          RowLayout {
-            Layout.fillWidth: true
-            spacing: Style.space(6)
-            visible: !root.backendStatus.preview
-            Text {
-              text: "TRY FOR"
-              color: Qt.alpha(root.barForeground, 0.58)
-              font.family: Style.font.family
-              font.pixelSize: Style.font.caption
-              font.bold: true
-            }
-            Button { text: "30s"; selected: root.previewSeconds === 30; focusable: true; onClicked: root.previewSeconds = 30 }
-            Button { text: "5m"; selected: root.previewSeconds === 300; focusable: true; onClicked: root.previewSeconds = 300 }
-            Button { text: "25m focus"; selected: root.previewSeconds === 1500; focusable: true; onClicked: root.previewSeconds = 1500 }
-          }
-
-          RowLayout {
-            Layout.fillWidth: true
-            spacing: Style.space(8)
-            Button {
-              Layout.fillWidth: true
-              text: root.previewSeconds === 30 ? "Try for 30 seconds" : (root.previewSeconds === 300 ? "Try for 5 minutes" : "Start 25-minute session")
-              enabled: root.hasActionablePlan && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
-              focusable: true
-              onClicked: root.previewSelected()
-            }
-            Button {
-              Layout.fillWidth: true
-              text: "Use this mode"
-              enabled: root.hasActionablePlan && !root.loading && !root.backendStatus.preview && !root.hasPendingConflicts
-              focusable: true
-              onClicked: root.applySelected()
-            }
-          }
-
-          RowLayout {
-            Layout.fillWidth: true
-            visible: !!root.backendStatus.preview
-            Button {
-              Layout.fillWidth: true
-              text: "Keep"
-              enabled: !root.loading
-              focusable: true
-              onClicked: root.keepPreview()
-            }
-            Button {
-              Layout.fillWidth: true
-              text: "Revert now"
-              enabled: !root.loading
-              focusable: true
-              onClicked: root.cancelPreview()
             }
           }
 

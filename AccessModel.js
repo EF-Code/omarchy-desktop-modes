@@ -84,7 +84,7 @@ function profileEffects(profile) {
   if (settings["hypr.blur.enabled"] === false) effects.push("Blur off")
   if (settings["hypr.dim_inactive"] === true) effects.push("Focus cue")
   if (settings["hypr.border_size"] !== undefined) effects.push("Border " + settings["hypr.border_size"] + "px")
-  return effects.slice(0, 3)
+  return effects.slice(0, 2)
 }
 
 function profileName(profiles, id) {
