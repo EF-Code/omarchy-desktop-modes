@@ -14,6 +14,7 @@ Rectangle {
 
   implicitWidth: Style.space(180)
   implicitHeight: Style.space(112)
+  clip: true
   radius: Style.cornerRadius
   color: selected ? Qt.alpha(Color.accent, 0.18) : Qt.alpha(foreground, 0.05)
   border.width: selected ? 2 : 1
@@ -62,7 +63,7 @@ Rectangle {
       elide: Text.ElideRight
     }
 
-    RowLayout {
+    Flow {
       Layout.fillWidth: true
       spacing: Style.space(4)
       Repeater {
