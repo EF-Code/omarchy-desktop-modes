@@ -201,10 +201,9 @@ Panel {
     }
     if (action === "status") {
       backendStatus = response
+      nowMs = Date.now()
       if (backendStatus.preview) selectProfileById(backendStatus.preview.profileId)
       else if (backendStatus.activeProfile) selectProfileById(backendStatus.activeProfile)
-      if (backendStatus.preview) previewTimer.start()
-      else previewTimer.stop()
       if (selectedProfile) planSelected()
       return
     }
@@ -259,6 +258,7 @@ Panel {
     id: previewTimer
     interval: 1000
     repeat: true
+    running: !!root.backendStatus.preview
     onTriggered: {
       root.nowMs = Date.now()
       if (root.backendStatus.preview && Number(root.backendStatus.preview.deadline || 0) <= Math.floor(root.nowMs / 1000))
