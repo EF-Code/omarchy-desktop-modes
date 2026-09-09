@@ -122,13 +122,13 @@ function formatCountdown(deadline, nowMs) {
 }
 
 function barState(status) {
-  if (!status) return { key: "baseline", label: "Access: original settings", glyph: "󰌵", warning: false }
+  if (!status) return { key: "baseline", label: "Desktop Modes: Original", glyph: "󰌵", warning: false }
   if (status.preview) return { key: "preview", label: "Previewing " + status.preview.profileId, glyph: "󰌵", warning: false }
   if (status.conflicts && status.conflicts.length > 0)
     return { key: "drift", label: "A managed setting changed outside Access", glyph: "󰌵", warning: true }
   if (status.activeProfile)
-    return { key: "active", label: "Access: " + status.activeProfile + " active", glyph: "󰌵", warning: false }
-  return { key: "baseline", label: "Access: original settings", glyph: "󰌵", warning: false }
+    return { key: "active", label: "Desktop Modes: " + status.activeProfile + " active", glyph: "󰌵", warning: false }
+  return { key: "baseline", label: "Desktop Modes: Original", glyph: "󰌵", warning: false }
 }
 
 function hasActionableChanges(plan) {

@@ -4,7 +4,7 @@ Switch Omarchy into the mode you need now—clearer, calmer, presentation-ready,
 or distraction-free. Try every change first, keep it with one click, and return
 to your exact original settings whenever you want.
 
-Access Profiles is a local-only Quickshell plugin for Omarchy 4.x. It groups
+Desktop Modes is a local-only Quickshell plugin for Omarchy 4.x. It groups
 carefully scoped Hyprland and GTK settings into six explainable modes:
 Large & Clear, Low Stimulation, Comfortable, Reduced Motion, Presentation, and Focus. Every preview and apply
 is read back, state is kept outside the checkout, and restore detects changes
@@ -37,7 +37,7 @@ omarchy plugin add https://github.com/EF-Code/omarchy-access-profiles.git --enab
 omarchy bar move io.github.ef-code.access-profiles --section right
 ```
 
-Open the Access icon, select a mode, review the plan, and choose **Try** or
+Open the Desktop Modes icon, select a mode, review the plan, and choose **Try** or
 **Use this mode**. A trial has explicit **Keep** and **Revert now** actions.
 The first preview or apply captures the original value for each setting Access
 actually manages. Later profile switches add only their newly managed settings

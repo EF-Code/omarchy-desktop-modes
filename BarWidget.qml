@@ -64,7 +64,7 @@ BarWidget {
     bar: root.bar
     text: panelLoader.item ? panelLoader.item.barGlyph : "󰌵"
     active: panelLoader.item ? panelLoader.item.barActive : false
-    tooltipText: panelLoader.item ? panelLoader.item.barTooltip : "Access Profiles"
+    tooltipText: panelLoader.item ? panelLoader.item.barTooltip : "Desktop Modes"
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.RightButton) root.restore()
       else root.toggle()

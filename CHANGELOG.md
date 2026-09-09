@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-- Reframed Access Profiles as reversible Desktop Modes and added Large & Clear
+- Renamed the public plugin from Access Profiles to Desktop Modes and added Large & Clear
   and Low Stimulation presets.
 - Redesigned profile cards with icons, effect summaries, active-state labels,
   clearer actions, and less repetitive change rows.

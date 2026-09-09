@@ -1,6 +1,6 @@
 # Security model
 
-Access Profiles runs inside the long-lived `omarchy-shell` process. Omarchy
+Desktop Modes runs inside the long-lived `omarchy-shell` process. Omarchy
 plugins are unsandboxed code, so users should inspect this repository before
 enabling it.
 
